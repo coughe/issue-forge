@@ -1,8 +1,11 @@
 project: AS
 
 items:
+  - type: Story
+    summary: Sample standalone story
+
   - type: Epic
-    summary: Test Mode
+    summary: Sample epic
     children:
       - type: Bug
         summary: Example bug
