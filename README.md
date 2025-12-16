@@ -121,6 +121,79 @@ uv run pytest
 
 ---
 
+## Credentials (Jira / GitHub)
+
+IssueForge supports a safe `--dry-run` mode that requires no credentials.
+When you later enable real Jira/GitHub emitters, you’ll typically provide credentials via environment variables.
+
+An example template is provided in [.env.example](.env.example).
+
+### Local setup using `.env`
+
+Copy the template:
+
+```bash
+cp .env.example .env
+```
+
+Fill in values, then export them into your shell session.
+
+Bash (macOS/Linux/Git Bash):
+
+```bash
+set -a
+source .env
+set +a
+```
+
+PowerShell:
+
+```powershell
+Get-Content .env | ForEach-Object {
+    if ($_ -match '^[A-Za-z_][A-Za-z0-9_]*=') {
+        $k, $v = $_ -split '=', 2
+        [Environment]::SetEnvironmentVariable($k, $v, 'Process')
+    }
+}
+```
+
+### GitHub token (PAT / fine-grained token)
+
+You need a token that can create/update issues in the target repository.
+
+Recommended (fine-grained token):
+- Resource owner: your user or org
+- Repository access: select the repo you’ll target
+- Repository permissions:
+    - **Issues**: Read and write
+    - **Metadata**: Read
+
+Classic PAT (legacy):
+- Public repos: `public_repo`
+- Private repos: `repo`
+
+Set:
+- `GITHUB_REPO=owner/repo`
+- `GITHUB_TOKEN=...`
+
+### Jira API token (Atlassian Cloud)
+
+For Jira Cloud, you authenticate with your Atlassian email + an API token (not your password).
+
+How to create a token:
+- Go to Atlassian account settings → Security → API tokens
+- Create a token and copy it once (store it in a password manager)
+
+Your Jira user must also have Jira permissions in the target project (e.g., “Create issues” / “Edit issues”).
+
+Set:
+- `JIRA_BASE_URL=https://your-domain.atlassian.net`
+- `JIRA_EMAIL=you@company.com`
+- `JIRA_API_TOKEN=...`
+- `JIRA_PROJECT_KEY=ABC` (commonly needed by emitters)
+
+---
+
 ## Repository Layout
 
 ```
