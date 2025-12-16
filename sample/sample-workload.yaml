@@ -1,21 +1,11 @@
-# Sample IssueForge workload (YAML)
-
 project: AS
 
 items:
   - type: Epic
     summary: Test Mode
-    description: >
-      Allow dev/staging actions without impacting live users.
-
     children:
-      - type: Story
-        summary: Toggle test mode
-        description: |
-          Scenario: Enable test mode
-          Given I am an admin
-          When I toggle test mode
-          Then it should be enabled
+      - type: Bug
+        summary: Example bug
         subtasks:
-          - summary: UI validation
-          - summary: Component tests
+          - summary: Regression test
+            blocks_parent: true

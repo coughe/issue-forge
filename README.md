@@ -26,17 +26,21 @@ Jira / GitHub emitters
 
 ---
 
-## Supported Inputs
+## Installation (UV)
 
-- `.yaml` / `.yml` (recommended)
-- `.json` (schema-validated directly)
-
----
-
-## Installation
+Install uv once:
 
 ```bash
-pip install jsonschema requests pyyaml yamllint
+curl -Ls https://astral.sh/uv/install.sh | sh
+```
+
+Set up the project:
+
+```bash
+uv python install 3.11
+uv venv
+source .venv/bin/activate
+uv pip install
 ```
 
 ---
@@ -44,42 +48,68 @@ pip install jsonschema requests pyyaml yamllint
 ## Quickstart
 
 ```bash
-# Lint (no mutation)
+# Lint YAML
 yamllint sample/sample-workload.yaml
 
-# Lint + normalize (optional)
+# Optional: normalize YAML formatting
 python scripts/lint_work.py sample/sample-workload.yaml --fix
 
 # Validate structure + semantics
 python scripts/validate_work.py sample/sample-workload.yaml
 
-# Emit Jira + GitHub issues
+# Preview changes (no external calls)
+python scripts/emit_phase1.py sample/sample-workload.yaml --dry-run
+
+# Execute for real
 python scripts/emit_phase1.py sample/sample-workload.yaml
 ```
 
 ---
 
-## Validation Rules (Enforced)
+## Dry Run Mode
 
-- Epics may only contain children
-- Stories must include Gherkin (`Scenario:`)
-- Spikes require artifact subtasks
-- Tasks require checklist subtasks
-- Bugs require blocking regression subtasks
-- Phases and milestones are forbidden
-- All items get `Refinement-required`
-- No auto-assignment
+When `--dry-run` is supplied:
+
+- No Jira or GitHub API calls are made
+- All validation still runs
+- All issue payloads are constructed
+- Output is printed for inspection
+
+Dry-run is strongly recommended before first execution.
 
 ---
 
-## Files
+## Running Tests
 
-- `schema/work-graph.schema.json` – canonical schema
-- `scripts/lint_work.py` – linter / normalizer
-- `scripts/validate_work.py` – structural + semantic validation
-- `scripts/emit_phase1.py` – Jira / GitHub emitters
-- `.yamllint.yml` – YAML style rules
-- `sample/sample-workload.yaml` – commented authoring example
+All tests mock external integrations.
+
+```bash
+uv pip install pytest
+pytest
+```
+
+---
+
+## Repository Layout
+
+```
+issue-forge/
+├── README.md
+├── .yamllint.yml
+├── pyproject.toml
+├── uv.lock
+├── schema/
+│   └── work-graph.schema.json
+├── scripts/
+│   ├── execution_context.py
+│   ├── lint_work.py
+│   ├── validate_work.py
+│   └── emit_phase1.py
+├── sample/
+│   └── sample-workload.yaml
+└── tests/
+    └── test_dry_run.py
+```
 
 ---
 
@@ -88,4 +118,4 @@ python scripts/emit_phase1.py sample/sample-workload.yaml
 - Validation never mutates input
 - Fixing is explicit and opt-in
 - Execution is deterministic
-- Drift is impossible unless you bypass the tool
+- Drift is impossible unless bypassed
