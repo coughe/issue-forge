@@ -23,8 +23,11 @@ jobs:
         run: |
           uv python install 3.11
           uv venv
+
+      - name: Install dependencies
+        run: |
           source .venv/bin/activate
-          uv pip install
+          uv pip install .
 
       - name: Run Black
         run: |
