@@ -7,7 +7,11 @@ description = "YAML-first work compiler for Jira and GitHub"
 dependencies = [
   "requests",
   "jsonschema",
-  "pyyaml",
+  "pyyaml"
+]
+
+[dependency-groups]
+dev = [
   "yamllint",
   "pytest",
   "black"

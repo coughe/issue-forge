@@ -1,0 +1,14 @@
+# Python virtual environments
+.venv/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# Test / coverage
+.pytest_cache/
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store

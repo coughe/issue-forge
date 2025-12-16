@@ -8,11 +8,11 @@ Humans write YAML. Machines validate structure. Emitters stay deterministic.
 
 ## Design Goals
 
-* Explicit, file-based inputs
-* Deterministic execution
-* No hidden side effects
-* Safe dry-run previews
-* Tooling-first, not process-first
+- Explicit, file-based inputs
+- Deterministic execution
+- No hidden side effects
+- Safe dry-run previews
+- Tooling-first, not process-first
 
 IssueForge is intentionally opinion-light. It provides structure, not policy.
 
@@ -20,27 +20,20 @@ IssueForge is intentionally opinion-light. It provides structure, not policy.
 
 ## Architecture
 
-```
 YAML (authoring)
-  ↓
-yamllint (syntax & style)
-  ↓
-YAML → in-memory model
-  ↓
-Schema validation
-  ↓
-Dry-run or emit
-  ↓
-Jira / GitHub (optional)
-```
+→ yamllint (syntax & style)
+→ in-memory model
+→ schema validation
+→ dry-run or emit
+→ Jira / GitHub (optional)
 
 ---
 
 ## Python Environment (uv)
 
-IssueForge uses **uv** for Python and dependency management.
+IssueForge uses **uv** for Python versioning, virtual environments, and dependency management.
 
-### Install uv (once)
+Install `uv` once:
 
 ```bash
 curl -Ls https://astral.sh/uv/install.sh | sh
@@ -56,51 +49,46 @@ uv --version
 
 ## Project Setup
 
-From the repo root:
+IssueForge uses **uv-native dependency groups** and does not require manual virtual
+environment activation.
+
+From the repository root:
 
 ```bash
 uv python install 3.11
-uv venv
-source .venv/bin/activate
-uv pip install
+uv sync --group dev
 ```
 
-All required tooling is installed by default, including:
-
-* pytest
-* black
-* yamllint
+This will:
+- install Python 3.11 if needed
+- create a virtual environment in `.venv`
+- install runtime and development dependencies
+- generate a deterministic `uv.lock`
 
 ---
 
-## Quickstart
+## Running Commands
+
+Use `uv run` to execute tools inside the environment:
 
 ```bash
-# Lint YAML (syntax & style only)
-yamllint sample/sample-workload.yaml
-
-# Validate structure
-python scripts/validate_work.py sample/sample-workload.yaml
-
-# Preview changes (no external calls)
-python scripts/emit_phase1.py sample/sample-workload.yaml --dry-run
-
-# Execute for real
-python scripts/emit_phase1.py sample/sample-workload.yaml
+uv run pytest
+uv run black .
+uv run yamllint sample/sample-workload.yaml
 ```
+
+Manual activation is optional and not required for normal use.
 
 ---
 
 ## Dry Run Mode
 
-IssueForge supports a **--dry-run** mode to safely preview changes.
+When `--dry-run` is enabled:
 
-When enabled:
-
-* No Jira or GitHub API calls are made
-* All validation still runs
-* All issue payloads are constructed
-* Output is printed for inspection
+- No Jira or GitHub API calls are made
+- All validation still runs
+- Issue payloads are constructed
+- Output is printed for inspection
 
 Dry-run is strongly recommended before first execution.
 
@@ -108,24 +96,27 @@ Dry-run is strongly recommended before first execution.
 
 ## Code Formatting
 
-IssueForge uses **Black** to enforce deterministic Python formatting.
+IssueForge uses **Black** for deterministic formatting.
 
 ```bash
-source .venv/bin/activate
-black .
+uv run black .
 ```
 
-CI enforces formatting using `black --check .`.
+CI enforces formatting using:
+
+```bash
+black --check .
+```
 
 ---
 
 ## Running Tests
 
-All tests use mocked integrations. No network access or credentials are required.
+All tests mock external integrations.
+No credentials or network access are required.
 
 ```bash
-source .venv/bin/activate
-pytest
+uv run pytest
 ```
 
 ---
@@ -135,19 +126,16 @@ pytest
 ```
 issue-forge/
 ├── README.md
-├── .yamllint.yml
 ├── pyproject.toml
 ├── uv.lock
-├── .github/
-│   └── workflows/
-│       └── lint.yml
+├── .yamllint.yml
 ├── schema/
 │   └── work-graph.schema.json
 ├── scripts/
+│   ├── emit_phase1.py
 │   ├── execution_context.py
 │   ├── lint_work.py
-│   ├── validate_work.py
-│   └── emit_phase1.py
+│   └── validate_work.py
 ├── sample/
 │   └── sample-workload.yaml
 └── tests/
@@ -158,7 +146,9 @@ issue-forge/
 
 ## Notes on Samples
 
-Sample workload files are intentionally minimal. They demonstrate valid shapes and nesting, not recommended workflows or organizational practices.
+Sample workload files are intentionally minimal and generic.
+They demonstrate valid structure and nesting, not recommended workflows or
+organizational practices.
 
 Each workload file targets a single project.
 
@@ -166,7 +156,7 @@ Each workload file targets a single project.
 
 ## Philosophy
 
-* Authoring should be human-friendly
-* Validation should be strict
-* Execution should be boring
-* Surprises should be impossible
+- Authoring should be human-friendly
+- Validation should be strict
+- Execution should be boring
+- Surprises should be impossible
