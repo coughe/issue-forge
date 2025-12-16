@@ -82,7 +82,7 @@ Dry-run is strongly recommended before first execution.
 All tests mock external integrations.
 
 ```bash
-uv pip install pytest
+source .venv/bin/activate
 pytest
 ```
 
