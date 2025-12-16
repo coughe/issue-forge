@@ -1,12 +1,27 @@
-
 [project]
 name = "issue-forge"
 version = "0.1.0"
 requires-python = ">=3.11"
+description = "YAML-first work compiler for Jira and GitHub"
+
 dependencies = [
   "requests",
   "jsonschema",
   "pyyaml",
   "yamllint",
-  "pytest"
+  "pytest",
+  "black"
 ]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''

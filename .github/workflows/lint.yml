@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  black:
+    name: Black formatting check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: |
+          curl -Ls https://astral.sh/uv/install.sh | sh
+
+      - name: Set up Python
+        run: |
+          uv python install 3.11
+          uv venv
+          source .venv/bin/activate
+          uv pip install
+
+      - name: Run Black
+        run: |
+          source .venv/bin/activate
+          black --check .
