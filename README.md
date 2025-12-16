@@ -2,91 +2,90 @@
 
 > Repository: **issue-forge**
 
-IssueForge is a JSON-first work compiler that turns structured intent into coordinated Jira work items and GitHub issues.
+IssueForge is a work-definition compiler that turns **human-authored YAML** into validated Jira work items and GitHub issues.
 
-It enforces strict contracts for features, bugs, spikes, and tasks, creates linked artifacts across systems, and acts as a deliberate bridge between planning, execution, and agent-driven workflows.
-
-IssueForge is intentionally boring: explicit inputs, deterministic outputs, no sync, and no background magic.
+Humans write YAML. Machines validate JSON. Emitters stay deterministic.
 
 ---
 
-## Why IssueForge
-
-Teams plan work in Jira, execute work in GitHub, and slowly lose alignment between the two.
-
-IssueForge fixes this by:
-
-- Treating work definition as code
-- Compiling a single source of truth into multiple systems
-- Enforcing discipline through validation instead of process docs
-- Creating agent-friendly GitHub issues without weakening Jira rigor
-
-One run. One snapshot. No drift.
-
----
-
-## Phase 1 Behavior
-
-- Jira issues always created
-- GitHub issues created for **Epics (Features)** and **Bugs** only
-- Explicit cross-linking
-- No syncing, no webhooks, no UI
-
----
-
-## Repository Layout
+## Architecture
 
 ```
-issue-forge/
-├── README.md
-├── schema/
-│   └── work-graph.schema.json
-└── scripts/
-    ├── validate_work.py
-    └── emit_phase1.py
+YAML (authoring, commented)
+  ↓
+yamllint (style & syntax)
+  ↓
+YAML → JSON (normalization)
+  ↓
+JSON Schema validation
+  ↓
+Semantic validation
+  ↓
+Jira / GitHub emitters
 ```
+
+---
+
+## Supported Inputs
+
+- `.yaml` / `.yml` (recommended)
+- `.json` (schema-validated directly)
 
 ---
 
 ## Installation
 
 ```bash
-pip install jsonschema requests
+pip install jsonschema requests pyyaml yamllint
 ```
 
 ---
 
-## Usage
+## Quickstart
 
 ```bash
-python scripts/validate_work.py work.json
-python scripts/emit_phase1.py work.json
+# Lint (no mutation)
+yamllint sample/sample-workload.yaml
+
+# Lint + normalize (optional)
+python scripts/lint_work.py sample/sample-workload.yaml --fix
+
+# Validate structure + semantics
+python scripts/validate_work.py sample/sample-workload.yaml
+
+# Emit Jira + GitHub issues
+python scripts/emit_phase1.py sample/sample-workload.yaml
 ```
+
+---
+
+## Validation Rules (Enforced)
+
+- Epics may only contain children
+- Stories must include Gherkin (`Scenario:`)
+- Spikes require artifact subtasks
+- Tasks require checklist subtasks
+- Bugs require blocking regression subtasks
+- Phases and milestones are forbidden
+- All items get `Refinement-required`
+- No auto-assignment
+
+---
+
+## Files
+
+- `schema/work-graph.schema.json` – canonical schema
+- `scripts/lint_work.py` – linter / normalizer
+- `scripts/validate_work.py` – structural + semantic validation
+- `scripts/emit_phase1.py` – Jira / GitHub emitters
+- `.yamllint.yml` – YAML style rules
+- `sample/sample-workload.yaml` – commented authoring example
 
 ---
 
 ## Philosophy
 
-IssueForge avoids:
-
-- Implicit behavior
-- Automatic syncing
-- Long-running services
-- UI-driven workflows
-
-It favors:
-
-- Explicit structure
-- Deterministic output
-- Human-readable artifacts
-- Agent-friendly execution
-
----
-
-## Roadmap (Not Implemented)
-
-- YAML-based config
-- --dry-run
-- GitHub labels and agent hints
-- Optional Jira → GitHub sync
-- Minimal control-plane UI
+- Validation never mutates input
+- Fixing is explicit and opt-in
+- Execution is deterministic
+- Drift is impossible unless you bypass the tool
