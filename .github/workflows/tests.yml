@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  pytest:
+    name: Pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: |
+          curl -Ls https://astral.sh/uv/install.sh | sh
+
+      - name: Set up Python
+        run: |
+          uv python install 3.11
+          uv venv
+
+      - name: Install test dependencies
+        run: |
+          source .venv/bin/activate
+          uv pip install pytest jsonschema pyyaml requests
+
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          pytest
