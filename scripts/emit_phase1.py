@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).parents[1]))
 import sys, yaml
 from scripts.execution_context import ExecutionContext
 
+
 def _workload_path_from_argv(argv: list[str]) -> str:
     for arg in argv[1:]:
         if not arg.startswith("-"):
