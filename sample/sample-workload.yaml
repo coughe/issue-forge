@@ -3,12 +3,33 @@ project: AS
 items:
   - type: Story
     summary: Sample standalone story
+    description: >
+      This is a placeholder description for a standalone story.
+      It exists to demonstrate that items can be created without
+      being associated with an Epic.
 
   - type: Epic
     summary: Sample epic
+    description: >
+      This is a placeholder epic used to demonstrate parent-child
+      relationships between work items.
+
     children:
       - type: Bug
         summary: Example bug
+        description: |
+          This is a placeholder bug description.
+
+          Steps to reproduce:
+          - Placeholder step one
+          - Placeholder step two
+
+          Expected behavior:
+          - Placeholder expected outcome
+
         subtasks:
           - summary: Regression test
+            description: >
+              Placeholder subtask representing a regression test
+              required to prevent recurrence.
             blocks_parent: true
