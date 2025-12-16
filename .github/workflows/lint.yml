@@ -24,10 +24,10 @@ jobs:
           uv python install 3.11
           uv venv
 
-      - name: Install dependencies
+      - name: Install tooling dependencies
         run: |
           source .venv/bin/activate
-          uv pip install .
+          uv pip install black pytest yamllint jsonschema pyyaml requests
 
       - name: Run Black
         run: |
