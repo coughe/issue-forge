@@ -1,7 +1,5 @@
 # IssueForge
 
-> Repository: **issue-forge**
-
 IssueForge is a work-definition compiler that turns **human-authored YAML** into validated Jira work items and GitHub issues.
 
 Humans write YAML. Machines validate JSON. Emitters stay deterministic.
