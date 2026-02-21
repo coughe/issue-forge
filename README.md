@@ -94,6 +94,51 @@ Dry-run is strongly recommended before first execution.
 
 ---
 
+## Manifest File Format
+
+IssueForge expects a YAML manifest with this shape:
+
+- Top-level `project` string
+- Top-level `items` list
+- Each item can include nested `children` and/or `subtasks`
+
+### Item Fields
+
+- `summary` (string): issue summary/title
+- `type` (string, optional): Jira type (defaults to `Subtask` when omitted)
+- `children` (list, optional): child issues
+- `subtasks` (list, optional): subtask-style children
+- `existing` (string, optional): existing Jira issue key (example: `ABC-123`)
+
+When `existing` is present, IssueForge does **not** create that item. Instead, it
+uses the existing Jira issue as the parent for that item’s descendants.
+
+### Example Manifest
+
+```yaml
+project: ABC
+items:
+    - type: Epic
+        summary: Existing parent epic
+        existing: ABC-123
+        children:
+            - type: Story
+                summary: Story created under existing epic
+                subtasks:
+                    - summary: Subtask created under the story
+            - type: Task
+                summary: Existing task parent
+                existing: ABC-456
+                children:
+                    - type: Bug
+                        summary: Bug created under existing task
+
+    - type: Epic
+        summary: New epic created by IssueForge
+```
+
+---
+
 ## Code Formatting
 
 IssueForge uses **Black** for deterministic formatting.
@@ -146,22 +191,11 @@ source .env
 set +a
 ```
 
-PowerShell:
-
-```powershell
-Get-Content .env | ForEach-Object {
-    if ($_ -match '^[A-Za-z_][A-Za-z0-9_]*=') {
-        $k, $v = $_ -split '=', 2
-        [Environment]::SetEnvironmentVariable($k, $v, 'Process')
-    }
-}
-```
-
 ### GitHub token (PAT / fine-grained token)
 
 You need a token that can create/update issues in the target repository.
 
-Recommended (fine-grained token):
+Fine-grained token:
 - Resource owner: your user or org
 - Repository access: select the repo you’ll target
 - Repository permissions:
@@ -224,12 +258,3 @@ They demonstrate valid structure and nesting, not recommended workflows or
 organizational practices.
 
 Each workload file targets a single project.
-
----
-
-## Philosophy
-
-- Authoring should be human-friendly
-- Validation should be strict
-- Execution should be boring
-- Surprises should be impossible
