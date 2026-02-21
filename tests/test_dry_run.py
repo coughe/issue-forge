@@ -2,6 +2,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parents[1]))
+
+from scripts.emit_phase1 import _emit_item
+from scripts.execution_context import ExecutionContext
+
 
 def test_dry_run_emits_intent_without_side_effects(tmp_path):
     """
@@ -55,3 +60,82 @@ def test_dry_run_emits_intent_without_side_effects(tmp_path):
     # Safety assertion: no accidental credential access
     assert "JIRA_" not in stdout
     assert "GITHUB_" not in stdout
+
+
+def test_existing_items_are_not_created_but_parent_children():
+    ctx = ExecutionContext(dry_run=True)
+
+    item = {
+        "type": "Epic",
+        "summary": "Existing Epic",
+        "existing": "ABC-123",
+        "children": [
+            {
+                "type": "Story",
+                "summary": "Created child",
+                "subtasks": [{"summary": "Created subtask"}],
+            },
+            {
+                "type": "Task",
+                "summary": "Existing child",
+                "existing": "ABC-456",
+                "children": [{"type": "Bug", "summary": "Created grandchild"}],
+            },
+        ],
+    }
+
+    _emit_item(ctx, item, dry_run=True)
+
+    assert len(ctx.jira) == 3
+
+    created_child = next(
+        payload for payload in ctx.jira if payload["summary"] == "Created child"
+    )
+    created_subtask = next(
+        payload for payload in ctx.jira if payload["summary"] == "Created subtask"
+    )
+    created_grandchild = next(
+        payload for payload in ctx.jira if payload["summary"] == "Created grandchild"
+    )
+
+    assert created_child["parent"] == "ABC-123"
+    assert created_subtask["parent"] == "DRY-RUN-JIRA"
+    assert created_grandchild["parent"] == "ABC-456"
+
+
+def test_description_is_passed_through_in_dry_run_payload():
+    ctx = ExecutionContext(dry_run=True)
+
+    item = {
+        "type": "Task",
+        "summary": "Task with description",
+        "description": "Detailed text for Jira description",
+    }
+
+    _emit_item(ctx, item, dry_run=True)
+
+    assert len(ctx.jira) == 1
+    assert ctx.jira[0]["description"] == "Detailed text for Jira description"
+
+
+def test_labels_are_applied_and_existing_anchor_not_created():
+    ctx = ExecutionContext(dry_run=True)
+
+    item = {
+        "type": "Epic",
+        "summary": "Existing anchor",
+        "existing": "ABC-123",
+        "children": [
+            {
+                "type": "Task",
+                "summary": "Created child",
+                "labels": ["IgnoredFromManifest"],
+            }
+        ],
+    }
+
+    _emit_item(ctx, item, dry_run=True)
+
+    assert len(ctx.jira) == 1
+    assert ctx.jira[0]["summary"] == "Created child"
+    assert ctx.jira[0]["labels"] == ["Idea"]
