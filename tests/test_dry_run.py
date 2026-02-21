@@ -2,6 +2,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parents[1]))
+
 from scripts.emit_phase1 import _emit_item
 from scripts.execution_context import ExecutionContext
 
@@ -86,7 +88,9 @@ def test_existing_items_are_not_created_but_parent_children():
 
     assert len(ctx.jira) == 3
 
-    created_child = next(payload for payload in ctx.jira if payload["summary"] == "Created child")
+    created_child = next(
+        payload for payload in ctx.jira if payload["summary"] == "Created child"
+    )
     created_subtask = next(
         payload for payload in ctx.jira if payload["summary"] == "Created subtask"
     )
@@ -112,3 +116,26 @@ def test_description_is_passed_through_in_dry_run_payload():
 
     assert len(ctx.jira) == 1
     assert ctx.jira[0]["description"] == "Detailed text for Jira description"
+
+
+def test_labels_are_applied_and_existing_anchor_not_created():
+    ctx = ExecutionContext(dry_run=True)
+
+    item = {
+        "type": "Epic",
+        "summary": "Existing anchor",
+        "existing": "ABC-123",
+        "children": [
+            {
+                "type": "Task",
+                "summary": "Created child",
+                "labels": ["IgnoredFromManifest"],
+            }
+        ],
+    }
+
+    _emit_item(ctx, item, dry_run=True)
+
+    assert len(ctx.jira) == 1
+    assert ctx.jira[0]["summary"] == "Created child"
+    assert ctx.jira[0]["labels"] == ["Idea"]

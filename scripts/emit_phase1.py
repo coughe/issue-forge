@@ -77,7 +77,7 @@ def _emit_item(
             f"{'DRY RUN' if dry_run else 'USE'} Existing Jira {issue_for_children}: {summary}"
         )
     else:
-        payload = {"type": item_type, "summary": summary}
+        payload = {"type": item_type, "summary": summary, "labels": ["Idea"]}
         if description is not None:
             payload["description"] = description
         if parent_issue:
