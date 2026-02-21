@@ -105,6 +105,7 @@ IssueForge expects a YAML manifest with this shape:
 ### Item Fields
 
 - `summary` (string): issue summary/title
+- `description` (string, optional): issue description passed to Jira when provided
 - `type` (string, optional): Jira type (defaults to `Subtask` when omitted)
 - `children` (list, optional): child issues
 - `subtasks` (list, optional): subtask-style children

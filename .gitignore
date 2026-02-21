@@ -13,5 +13,8 @@ __pycache__/
 .idea/
 .DS_Store
 
+# Generated review artifacts
+review/
+
 # Local credentials
 .env

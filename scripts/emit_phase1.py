@@ -67,6 +67,7 @@ def _emit_item(
 ) -> None:
     item_type = item.get("type") or "Subtask"
     summary = item.get("summary", "")
+    description = item.get("description")
     existing_issue = item.get("existing")
 
     issue_for_children = parent_issue
@@ -77,6 +78,8 @@ def _emit_item(
         )
     else:
         payload = {"type": item_type, "summary": summary}
+        if description is not None:
+            payload["description"] = description
         if parent_issue:
             payload["parent"] = parent_issue
         created_issue = ctx.record_jira(payload)

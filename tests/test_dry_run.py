@@ -97,3 +97,18 @@ def test_existing_items_are_not_created_but_parent_children():
     assert created_child["parent"] == "ABC-123"
     assert created_subtask["parent"] == "DRY-RUN-JIRA"
     assert created_grandchild["parent"] == "ABC-456"
+
+
+def test_description_is_passed_through_in_dry_run_payload():
+    ctx = ExecutionContext(dry_run=True)
+
+    item = {
+        "type": "Task",
+        "summary": "Task with description",
+        "description": "Detailed text for Jira description",
+    }
+
+    _emit_item(ctx, item, dry_run=True)
+
+    assert len(ctx.jira) == 1
+    assert ctx.jira[0]["description"] == "Detailed text for Jira description"
