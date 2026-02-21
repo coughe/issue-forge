@@ -1,0 +1,43 @@
+name: Issue Forge Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      manifest:
+        description: "YAML manifest content to run with Issue Forge"
+        required: true
+        type: string
+
+jobs:
+  run-issue-forge:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout repository so scripts and dependency files are available.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up Python for running Issue Forge.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Install Python dependencies.
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Write the provided manifest input to a file for the CLI.
+      - name: Write manifest file
+        run: |
+          printf '%s' "${{ github.event.inputs.manifest }}" > manifest.yaml
+
+      # Run Issue Forge with Jira credentials from repository secrets.
+      - name: Run Issue Forge
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          python scripts/emit_phase1.py manifest.yaml

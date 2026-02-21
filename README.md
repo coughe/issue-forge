@@ -81,6 +81,30 @@ Manual activation is optional and not required for normal use.
 
 ---
 
+## Run via GitHub Actions (CLI)
+
+You can trigger the upload workflow manually and pass manifest content directly
+from the command line (no manifest file required in the repository).
+
+Prerequisites:
+- GitHub CLI authenticated for the repository (`gh auth login`)
+- Repository secrets configured: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`
+
+Run from repository root:
+
+```bash
+gh workflow run issue-forge-upload.yml \
+    --field manifest="$(cat sample/sample-workload.yaml)"
+```
+
+To watch the run:
+
+```bash
+gh run watch
+```
+
+---
+
 ## Dry Run Mode
 
 When `--dry-run` is enabled:
