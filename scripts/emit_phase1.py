@@ -3,15 +3,54 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
-import sys, yaml
+import json
+import yaml
 from scripts.execution_context import ExecutionContext
 
 
-def _workload_path_from_argv(argv: list[str]) -> str:
-    for arg in argv[1:]:
-        if not arg.startswith("-"):
-            return arg
-    raise SystemExit("Missing workload path argument")
+def _parse_cli_args(argv: list[str]) -> tuple[str, bool, str]:
+    dry_run = False
+    manifest_format = "yaml"
+    workload_path: str | None = None
+
+    index = 1
+    while index < len(argv):
+        arg = argv[index]
+
+        if arg == "--dry-run":
+            dry_run = True
+            index += 1
+            continue
+
+        if arg == "--format":
+            if index + 1 >= len(argv):
+                raise SystemExit("Missing value for --format (expected 'yaml' or 'json')")
+            manifest_format = argv[index + 1].strip().lower()
+            index += 2
+            continue
+
+        if arg.startswith("--format="):
+            manifest_format = arg.split("=", 1)[1].strip().lower()
+            index += 1
+            continue
+
+        if arg.startswith("-"):
+            raise SystemExit(f"Unknown option: {arg}")
+
+        if workload_path is None:
+            workload_path = arg
+            index += 1
+            continue
+
+        raise SystemExit(f"Unexpected extra argument: {arg}")
+
+    if workload_path is None:
+        raise SystemExit("Missing workload path argument")
+
+    if manifest_format not in {"yaml", "json"}:
+        raise SystemExit("Invalid --format value (expected 'yaml' or 'json')")
+
+    return workload_path, dry_run, manifest_format
 
 
 def _normalize_yaml_for_indented_inline_mappings(yaml_text: str) -> str:
@@ -45,14 +84,28 @@ def _normalize_yaml_for_indented_inline_mappings(yaml_text: str) -> str:
     return "\n".join(fixed_lines) + ("\n" if yaml_text.endswith("\n") else "")
 
 
-def _load_workload_yaml(path: str) -> dict:
+def _load_workload(path: str, manifest_format: str = "yaml") -> dict:
     with open(path, "r", encoding="utf-8") as f:
         raw = f.read()
 
-    try:
-        loaded = yaml.safe_load(raw)
-    except Exception:
-        loaded = yaml.safe_load(_normalize_yaml_for_indented_inline_mappings(raw))
+    if manifest_format == "yaml":
+        try:
+            loaded = yaml.safe_load(raw)
+        except Exception:
+            try:
+                loaded = yaml.safe_load(_normalize_yaml_for_indented_inline_mappings(raw))
+            except Exception as exc:
+                raise SystemExit(f"Failed to parse YAML manifest: {exc}") from exc
+    elif manifest_format == "json":
+        try:
+            loaded = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise SystemExit(
+                f"Failed to parse JSON manifest: {exc.msg} (line {exc.lineno}, column {exc.colno})"
+            ) from exc
+    else:
+        raise SystemExit("Invalid --format value (expected 'yaml' or 'json')")
+
     if not isinstance(loaded, dict):
         raise SystemExit("Workload must be a mapping at the top level")
     return loaded
@@ -97,10 +150,9 @@ def _emit_item(
 
 def main(argv: list[str] | None = None) -> int:
     argv = argv or sys.argv
-    dry_run = "--dry-run" in argv
-    path = _workload_path_from_argv(argv)
+    path, dry_run, manifest_format = _parse_cli_args(argv)
 
-    work = _load_workload_yaml(path)
+    work = _load_workload(path, manifest_format=manifest_format)
     project = work.get("project")
     if not isinstance(project, str) or not project.strip():
         raise SystemExit("Manifest must include a non-empty 'project' field")

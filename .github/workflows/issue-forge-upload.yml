@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       manifest:
-        description: "YAML manifest content to run with Issue Forge"
+        description: "JSON manifest content to run with Issue Forge"
         required: true
         type: string
 
@@ -39,28 +39,10 @@ jobs:
 
       # Write the provided manifest input to a file for the CLI.
       - name: Write manifest file
-        env:
-          MANIFEST_INPUT: ${{ github.event.inputs.manifest }}
         run: |
-          python - <<'PY'
-          import os
-          import sys
-
-          manifest = os.environ.get("MANIFEST_INPUT", "")
-          if "\n" not in manifest and "\\n" in manifest:
-            manifest = manifest.replace("\\n", "\n")
-
-          if "\n" not in manifest:
-            print(
-              "Manifest input appears flattened. Dispatch with: "
-              "gh workflow run issue-forge-upload.yml -F manifest=@first-issue.yml",
-              file=sys.stderr,
-            )
-            sys.exit(1)
-
-          with open("manifest.yaml", "w", encoding="utf-8") as f:
-            f.write(manifest)
-          PY
+          cat << 'EOF' > manifest.json
+          ${{ github.event.inputs.manifest }}
+          EOF
 
       # Run Issue Forge with Jira credentials from repository secrets.
       - name: Run Issue Forge
@@ -69,4 +51,4 @@ jobs:
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
-          uv run python scripts/emit_phase1.py manifest.yaml
+          uv run python scripts/emit_phase1.py manifest.json --format json

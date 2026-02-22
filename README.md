@@ -84,7 +84,10 @@ Manual activation is optional and not required for normal use.
 ## Run via GitHub Actions (CLI)
 
 You can trigger the upload workflow manually and pass manifest content directly
-from the command line (no manifest file required in the repository).
+from the command line.
+
+The upload workflow accepts **JSON manifest content only**.
+For local authoring and local CLI runs, YAML remains the default format.
 
 Prerequisites:
 - GitHub CLI authenticated for the repository (`gh auth login`)
@@ -94,13 +97,33 @@ Run from repository root:
 
 ```bash
 gh workflow run issue-forge-upload.yml \
-    -F manifest=@sample/sample-workload.yaml
+        --raw-field manifest='{"project":"AS","items":[]}'
 ```
 
 To watch the run:
 
 ```bash
 gh run watch
+```
+
+Minimal JSON example for manual GitHub UI runs:
+
+```json
+{
+    "project": "AS",
+    "items": [
+        {
+            "existing": "AS-211",
+            "children": [
+                {
+                    "type": "Story",
+                    "summary": "First IssueForge-generated agent story",
+                    "description": "Minimal test story created under the existing epic"
+                }
+            ]
+        }
+    ]
+}
 ```
 
 ---
@@ -153,7 +176,10 @@ Dry-run is strongly recommended before first execution.
 
 ## Manifest File Format
 
-IssueForge expects a YAML manifest with this shape:
+IssueForge defaults to **YAML** manifests for local CLI usage.
+GitHub Actions upload requires the same manifest structure in **JSON**.
+
+Expected manifest shape:
 
 - Exactly one top-level `project` string
 - Top-level `items` list
