@@ -139,3 +139,30 @@ def test_labels_are_applied_and_existing_anchor_not_created():
     assert len(ctx.jira) == 1
     assert ctx.jira[0]["summary"] == "Created child"
     assert ctx.jira[0]["labels"] == ["Idea"]
+
+
+def test_manifest_project_is_required_and_not_taken_from_env(tmp_path, monkeypatch):
+    monkeypatch.setenv("JIRA_PROJECT_KEY", "ABC")
+
+    workload = """
+    items:
+    - summary: Missing project
+    """
+
+    workload_path = tmp_path / "work.yaml"
+    workload_path.write_text(workload)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/emit_phase1.py",
+            str(workload_path),
+            "--dry-run",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).parents[1],
+    )
+
+    assert result.returncode != 0
+    assert "Manifest must include a non-empty 'project' field" in result.stderr

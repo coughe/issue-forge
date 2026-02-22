@@ -101,6 +101,10 @@ def main(argv: list[str] | None = None) -> int:
     path = _workload_path_from_argv(argv)
 
     work = _load_workload_yaml(path)
+    project = work.get("project")
+    if not isinstance(project, str) or not project.strip():
+        raise SystemExit("Manifest must include a non-empty 'project' field")
+
     ctx = ExecutionContext(dry_run=dry_run)
 
     for item in work.get("items", []) or []:
