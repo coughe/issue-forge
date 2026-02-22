@@ -122,7 +122,7 @@ Dry-run is strongly recommended before first execution.
 
 IssueForge expects a YAML manifest with this shape:
 
-- Top-level `project` string
+- Exactly one top-level `project` string
 - Top-level `items` list
 - Each item can include nested `children` and/or `subtasks`
 
@@ -249,7 +249,8 @@ Set:
 - `JIRA_BASE_URL=https://your-domain.atlassian.net`
 - `JIRA_EMAIL=you@company.com`
 - `JIRA_API_TOKEN=...`
-- `JIRA_PROJECT_KEY=ABC` (commonly needed by emitters)
+
+Project must be provided by the manifest (`project:`) and is not read from environment defaults.
 
 ---
 
