@@ -1,5 +1,16 @@
 name: Issue Forge Upload
 
+# CLI troubleshooting (Codespaces & local):
+# Codespaces may inject a limited GITHUB_TOKEN that cannot dispatch
+# workflow_dispatch workflows via `gh workflow run`.
+# Re-auth `gh` with workflow scope before dispatching:
+#   unset GITHUB_TOKEN
+#   unset GH_TOKEN
+#   gh auth login -h github.com -p https -s repo,workflow
+# Verify with:
+#   gh auth status
+# Expected scopes include: repo, workflow
+
 on:
   workflow_dispatch:
     inputs:
@@ -16,17 +27,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Set up Python for running Issue Forge.
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      # Install uv for Python/runtime management.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
 
-      # Install Python dependencies.
+      # Install Python and sync dependencies from pyproject.toml.
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          uv python install 3.11
+          uv sync --group dev
 
       # Write the provided manifest input to a file for the CLI.
       - name: Write manifest file
@@ -40,4 +49,4 @@ jobs:
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
-          python scripts/emit_phase1.py manifest.yaml
+          uv run python scripts/emit_phase1.py manifest.yaml
