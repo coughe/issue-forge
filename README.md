@@ -94,7 +94,7 @@ Run from repository root:
 
 ```bash
 gh workflow run issue-forge-upload.yml \
-    --field manifest="$(cat sample/sample-workload.yaml)"
+    -F manifest=@sample/sample-workload.yaml
 ```
 
 To watch the run:
@@ -132,7 +132,7 @@ Example workflow run after auth:
 
 ```bash
 gh workflow run issue-forge-upload.yml \
-    --field manifest="$(cat sample/sample-workload.yaml)"
+    -F manifest=@sample/sample-workload.yaml
 gh run watch
 ```
 
