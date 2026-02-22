@@ -105,6 +105,39 @@ gh run watch
 
 ---
 
+## GitHub CLI Authentication (Codespaces & Local)
+
+In Codespaces, a limited `GITHUB_TOKEN` is injected by default. That token can
+read repository data, but it cannot dispatch `workflow_dispatch` GitHub Actions
+workflows.
+
+Authenticate `gh` with a token that includes `workflow` scope:
+
+```bash
+unset GITHUB_TOKEN
+unset GH_TOKEN
+
+gh auth login -h github.com -p https -s repo,workflow
+```
+
+Verify authentication:
+
+```bash
+gh auth status
+```
+
+Expected scopes include: `repo`, `workflow`.
+
+Example workflow run after auth:
+
+```bash
+gh workflow run issue-forge-upload.yml \
+    --field manifest="$(cat sample/sample-workload.yaml)"
+gh run watch
+```
+
+---
+
 ## Dry Run Mode
 
 When `--dry-run` is enabled:
