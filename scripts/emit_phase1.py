@@ -117,6 +117,7 @@ def _emit_item(
     *,
     dry_run: bool,
     parent_issue: str | None = None,
+    project: str | None = None,
 ) -> None:
     item_type = item.get("type") or "Subtask"
     summary = item.get("summary", "")
@@ -131,6 +132,8 @@ def _emit_item(
         )
     else:
         payload = {"type": item_type, "summary": summary, "labels": ["Idea"]}
+        if project:
+            payload["project"] = project
         if description is not None:
             payload["description"] = description
         if parent_issue:
@@ -141,11 +144,23 @@ def _emit_item(
 
     for child in item.get("children", []) or []:
         if isinstance(child, dict):
-            _emit_item(ctx, child, dry_run=dry_run, parent_issue=issue_for_children)
+            _emit_item(
+                ctx,
+                child,
+                dry_run=dry_run,
+                parent_issue=issue_for_children,
+                project=project,
+            )
 
     for subtask in item.get("subtasks", []) or []:
         if isinstance(subtask, dict):
-            _emit_item(ctx, subtask, dry_run=dry_run, parent_issue=issue_for_children)
+            _emit_item(
+                ctx,
+                subtask,
+                dry_run=dry_run,
+                parent_issue=issue_for_children,
+                project=project,
+            )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -161,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
 
     for item in work.get("items", []) or []:
         if isinstance(item, dict):
-            _emit_item(ctx, item, dry_run=dry_run)
+            _emit_item(ctx, item, dry_run=dry_run, project=project)
 
     print("Done")
     return 0
