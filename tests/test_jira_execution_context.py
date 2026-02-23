@@ -103,21 +103,24 @@ def test_fetch_project_labels_collects_and_deduplicates(monkeypatch):
         def json(self):
             return self._payload
 
+    seen_urls = []
+
     def fake_get(url, auth, headers, params, timeout):
+        seen_urls.append(url)
         calls.append(params)
-        if params["startAt"] == 0:
+        if "nextPageToken" not in params:
             return FakeResponse(
                 {
                     "issues": [
                         {"fields": {"labels": ["Refinement-required", "backend"]}}
                     ],
-                    "total": 2,
+                    "nextPageToken": "page-2",
                 }
             )
         return FakeResponse(
             {
                 "issues": [{"fields": {"labels": ["backend", "ops"]}}],
-                "total": 2,
+                "isLast": True,
             }
         )
 
@@ -127,8 +130,10 @@ def test_fetch_project_labels_collects_and_deduplicates(monkeypatch):
     labels = ctx.fetch_project_labels("AS")
 
     assert labels == {"Refinement-required", "backend", "ops"}
+    assert seen_urls[0] == "https://example.atlassian.net/rest/api/3/search/jql"
     assert calls[0]["jql"] == "project=AS"
     assert calls[0]["fields"] == "labels"
+    assert calls[1]["nextPageToken"] == "page-2"
 
 
 def test_fetch_project_labels_raises_on_http_error(monkeypatch):

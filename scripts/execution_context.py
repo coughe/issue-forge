@@ -97,20 +97,23 @@ class ExecutionContext:
             )
 
         collected: set[str] = set()
-        start_at = 0
         max_results = 100
+        next_page_token: str | None = None
 
         while True:
+            params = {
+                "jql": f"project={project_key}",
+                "fields": "labels",
+                "maxResults": max_results,
+            }
+            if next_page_token:
+                params["nextPageToken"] = next_page_token
+
             response = requests.get(
-                f"{self.jira_base_url}/rest/api/3/search",
+                f"{self.jira_base_url}/rest/api/3/search/jql",
                 auth=(self.jira_email, self.jira_api_token),
                 headers={"Accept": "application/json"},
-                params={
-                    "jql": f"project={project_key}",
-                    "fields": "labels",
-                    "startAt": start_at,
-                    "maxResults": max_results,
-                },
+                params=params,
                 timeout=30,
             )
 
@@ -129,9 +132,16 @@ class ExecutionContext:
                         if isinstance(label, str) and label:
                             collected.add(label)
 
+            next_page_token = data.get("nextPageToken")
+            if next_page_token:
+                continue
+
+            if data.get("isLast") is True:
+                break
+
             total = int(data.get("total", 0) or 0)
-            start_at += len(issues)
-            if start_at >= total or not issues:
+            start_at = int(data.get("startAt", 0) or 0)
+            if (start_at + len(issues)) >= total or not issues:
                 break
 
         return collected
