@@ -190,12 +190,16 @@ Expected manifest shape:
 - `summary` (string): issue summary/title
 - `description` (string, optional): issue description passed to Jira when provided
 - `type` (string, optional): Jira type (defaults to `Subtask` when omitted)
+- `labels` (list of strings, optional): Jira labels to apply to that item
 - `children` (list, optional): child issues
 - `subtasks` (list, optional): subtask-style children
 - `existing` (string, optional): existing Jira issue key (example: `ABC-123`)
 
 When `existing` is present, IssueForge does **not** create that item. Instead, it
 uses the existing Jira issue as the parent for that item’s descendants.
+
+IssueForge does **not** apply any default labels. Labels are emitted only when
+the manifest item explicitly includes `labels`.
 
 ### Example Manifest
 
@@ -208,6 +212,7 @@ items:
         children:
             - type: Story
                 summary: Story created under existing epic
+                labels: [backend, priority-high]
                 subtasks:
                     - summary: Subtask created under the story
             - type: Task

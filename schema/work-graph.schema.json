@@ -4,6 +4,32 @@
   "required": ["project", "items"],
   "properties": {
     "project": { "type": "string" },
-    "items": { "type": "array" }
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "properties": {
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string" },
+        "existing": { "type": "string" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/item" }
+        },
+        "subtasks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/item" }
+        }
+      }
+    }
   }
 }

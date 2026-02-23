@@ -118,27 +118,37 @@ def test_description_is_passed_through_in_dry_run_payload():
     assert ctx.jira[0]["description"] == "Detailed text for Jira description"
 
 
-def test_labels_are_applied_and_existing_anchor_not_created():
+def test_labels_are_omitted_when_not_present_in_manifest_item():
     ctx = ExecutionContext(dry_run=True)
 
     item = {
         "type": "Epic",
         "summary": "Existing anchor",
         "existing": "ABC-123",
-        "children": [
-            {
-                "type": "Task",
-                "summary": "Created child",
-                "labels": ["IgnoredFromManifest"],
-            }
-        ],
+        "children": [{"type": "Task", "summary": "Created child"}],
     }
 
     _emit_item(ctx, item, dry_run=True)
 
     assert len(ctx.jira) == 1
     assert ctx.jira[0]["summary"] == "Created child"
-    assert ctx.jira[0]["labels"] == ["Idea"]
+    assert "labels" not in ctx.jira[0]
+
+
+def test_labels_are_passed_through_from_manifest_item():
+    ctx = ExecutionContext(dry_run=True)
+
+    item = {
+        "type": "Task",
+        "summary": "Created child",
+        "labels": ["backend", "priority-high"],
+    }
+
+    _emit_item(ctx, item, dry_run=True)
+
+    assert len(ctx.jira) == 1
+    assert ctx.jira[0]["summary"] == "Created child"
+    assert ctx.jira[0]["labels"] == ["backend", "priority-high"]
 
 
 def test_manifest_project_is_required_and_not_taken_from_env(tmp_path, monkeypatch):
