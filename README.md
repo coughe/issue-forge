@@ -172,6 +172,11 @@ When `--dry-run` is enabled:
 
 Dry-run is strongly recommended before first execution.
 
+Label validation can be enabled with `--validate-labels` (or
+`ISSUE_FORGE_VALIDATE_LABELS=true`). When enabled for live runs, IssueForge
+queries Jira for existing labels in the target project and fails before
+creating issues if any manifest labels are unknown.
+
 ---
 
 ## Manifest File Format
@@ -200,6 +205,9 @@ uses the existing Jira issue as the parent for that item’s descendants.
 
 IssueForge does **not** apply any default labels. Labels are emitted only when
 the manifest item explicitly includes `labels`.
+
+IssueForge never auto-creates Jira labels. Manifest labels must already exist
+in Jira when label validation is enabled.
 
 ### Example Manifest
 

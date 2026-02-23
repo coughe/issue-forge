@@ -2,6 +2,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from scripts.emit_phase1 import _emit_item
@@ -176,3 +178,94 @@ def test_manifest_project_is_required_and_not_taken_from_env(tmp_path, monkeypat
 
     assert result.returncode != 0
     assert "Manifest must include a non-empty 'project' field" in result.stderr
+
+
+def test_validate_manifest_labels_accepts_known_labels(monkeypatch):
+    from scripts.emit_phase1 import _validate_manifest_labels
+
+    ctx = ExecutionContext(dry_run=False)
+
+    def fake_fetch(project):
+        assert project == "AS"
+        return {"Refinement-required", "backend"}
+
+    monkeypatch.setattr(ctx, "fetch_project_labels", fake_fetch)
+
+    _validate_manifest_labels(
+        ctx,
+        project="AS",
+        dry_run=False,
+        items=[
+            {
+                "type": "Epic",
+                "summary": "Top",
+                "children": [
+                    {
+                        "type": "Task",
+                        "summary": "Child",
+                        "labels": ["Refinement-required"],
+                        "subtasks": [
+                            {
+                                "summary": "Subtask",
+                                "labels": ["backend"],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    )
+
+
+def test_validate_manifest_labels_fails_on_unknown_labels(monkeypatch):
+    from scripts.emit_phase1 import _validate_manifest_labels
+
+    ctx = ExecutionContext(dry_run=False)
+
+    monkeypatch.setattr(ctx, "fetch_project_labels", lambda project: {"backend"})
+
+    with pytest.raises(
+        SystemExit,
+        match=r"Unknown Jira labels for project AS: Refinement-required, security",
+    ):
+        _validate_manifest_labels(
+            ctx,
+            project="AS",
+            dry_run=False,
+            items=[
+                {
+                    "type": "Task",
+                    "summary": "Child",
+                    "labels": ["security", "Refinement-required"],
+                }
+            ],
+        )
+
+
+def test_dry_run_with_validate_labels_flag_still_works_without_jira_credentials(tmp_path):
+    workload = """
+    project: AS
+    items:
+      - type: Task
+        summary: Dry run with label validation enabled
+        labels: [Refinement-required]
+    """
+
+    workload_path = tmp_path / "work.yaml"
+    workload_path.write_text(workload)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/emit_phase1.py",
+            str(workload_path),
+            "--dry-run",
+            "--validate-labels",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).parents[1],
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "DRY RUN" in result.stdout

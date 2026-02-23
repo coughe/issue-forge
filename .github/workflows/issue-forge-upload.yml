@@ -51,4 +51,4 @@ jobs:
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
-          uv run python scripts/emit_phase1.py manifest.json --format json
+          uv run python scripts/emit_phase1.py manifest.json --format json --validate-labels

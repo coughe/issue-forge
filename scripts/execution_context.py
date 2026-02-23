@@ -90,6 +90,52 @@ class ExecutionContext:
 
         return issue_key
 
+    def fetch_project_labels(self, project_key: str) -> set[str]:
+        if not (self.jira_base_url and self.jira_email and self.jira_api_token):
+            raise SystemExit(
+                "Missing Jira credentials: set JIRA_BASE_URL, JIRA_EMAIL, and JIRA_API_TOKEN"
+            )
+
+        collected: set[str] = set()
+        start_at = 0
+        max_results = 100
+
+        while True:
+            response = requests.get(
+                f"{self.jira_base_url}/rest/api/3/search",
+                auth=(self.jira_email, self.jira_api_token),
+                headers={"Accept": "application/json"},
+                params={
+                    "jql": f"project={project_key}",
+                    "fields": "labels",
+                    "startAt": start_at,
+                    "maxResults": max_results,
+                },
+                timeout=30,
+            )
+
+            if response.status_code >= 400:
+                raise SystemExit(
+                    f"Jira label fetch failed ({response.status_code}): {response.text.strip()}"
+                )
+
+            data = response.json()
+            issues = data.get("issues", []) or []
+            for issue in issues:
+                fields = issue.get("fields", {}) if isinstance(issue, dict) else {}
+                labels = fields.get("labels") if isinstance(fields, dict) else None
+                if isinstance(labels, list):
+                    for label in labels:
+                        if isinstance(label, str) and label:
+                            collected.add(label)
+
+            total = int(data.get("total", 0) or 0)
+            start_at += len(issues)
+            if start_at >= total or not issues:
+                break
+
+        return collected
+
     def record_github(self, payload):
         self.github.append(payload)
         return "https://github.com/dry-run/issue"

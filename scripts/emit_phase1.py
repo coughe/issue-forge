@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+import os
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
@@ -8,9 +9,10 @@ import yaml
 from scripts.execution_context import ExecutionContext
 
 
-def _parse_cli_args(argv: list[str]) -> tuple[str, bool, str]:
+def _parse_cli_args(argv: list[str]) -> tuple[str, bool, str, bool]:
     dry_run = False
     manifest_format = "yaml"
+    validate_labels = False
     workload_path: str | None = None
 
     index = 1
@@ -19,6 +21,11 @@ def _parse_cli_args(argv: list[str]) -> tuple[str, bool, str]:
 
         if arg == "--dry-run":
             dry_run = True
+            index += 1
+            continue
+
+        if arg == "--validate-labels":
+            validate_labels = True
             index += 1
             continue
 
@@ -50,7 +57,56 @@ def _parse_cli_args(argv: list[str]) -> tuple[str, bool, str]:
     if manifest_format not in {"yaml", "json"}:
         raise SystemExit("Invalid --format value (expected 'yaml' or 'json')")
 
-    return workload_path, dry_run, manifest_format
+    return workload_path, dry_run, manifest_format, validate_labels
+
+
+def _is_truthy_env(value: str | None) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _iter_manifest_items(items: list) -> list[dict]:
+    stack = list(items or [])
+    walked: list[dict] = []
+    while stack:
+        node = stack.pop()
+        if not isinstance(node, dict):
+            continue
+        walked.append(node)
+        for child in node.get("children", []) or []:
+            stack.append(child)
+        for subtask in node.get("subtasks", []) or []:
+            stack.append(subtask)
+    return walked
+
+
+def _collect_manifest_labels(items: list) -> set[str]:
+    labels: set[str] = set()
+    for node in _iter_manifest_items(items):
+        node_labels = node.get("labels")
+        if not isinstance(node_labels, list):
+            continue
+        for label in node_labels:
+            if isinstance(label, str) and label:
+                labels.add(label)
+    return labels
+
+
+def _validate_manifest_labels(
+    ctx: ExecutionContext, *, project: str, items: list, dry_run: bool
+) -> None:
+    manifest_labels = _collect_manifest_labels(items)
+    if dry_run:
+        return
+
+    allowed_labels = ctx.fetch_project_labels(project)
+    if not manifest_labels:
+        return
+    invalid_labels = sorted(label for label in manifest_labels if label not in allowed_labels)
+    if invalid_labels:
+        joined = ", ".join(invalid_labels)
+        raise SystemExit(f"Unknown Jira labels for project {project}: {joined}")
 
 
 def _normalize_yaml_for_indented_inline_mappings(yaml_text: str) -> str:
@@ -167,7 +223,10 @@ def _emit_item(
 
 def main(argv: list[str] | None = None) -> int:
     argv = argv or sys.argv
-    path, dry_run, manifest_format = _parse_cli_args(argv)
+    path, dry_run, manifest_format, cli_validate_labels = _parse_cli_args(argv)
+    validate_labels = cli_validate_labels or _is_truthy_env(
+        os.getenv("ISSUE_FORGE_VALIDATE_LABELS")
+    )
 
     work = _load_workload(path, manifest_format=manifest_format)
     project = work.get("project")
@@ -175,6 +234,10 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("Manifest must include a non-empty 'project' field")
 
     ctx = ExecutionContext(dry_run=dry_run)
+    if validate_labels:
+        _validate_manifest_labels(
+            ctx, project=project, items=work.get("items", []) or [], dry_run=dry_run
+        )
 
     for item in work.get("items", []) or []:
         if isinstance(item, dict):
