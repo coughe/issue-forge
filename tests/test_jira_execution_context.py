@@ -131,7 +131,7 @@ def test_fetch_project_labels_collects_and_deduplicates(monkeypatch):
 
     assert labels == {"Refinement-required", "backend", "ops"}
     assert seen_urls[0] == "https://example.atlassian.net/rest/api/3/search/jql"
-    assert calls[0]["jql"] == "project=AS"
+    assert calls[0]["jql"] == 'project="AS"'
     assert calls[0]["fields"] == "labels"
     assert calls[1]["nextPageToken"] == "page-2"
 

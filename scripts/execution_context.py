@@ -99,10 +99,12 @@ class ExecutionContext:
         collected: set[str] = set()
         max_results = 100
         next_page_token: str | None = None
+        safe_project_key = str(project_key).replace('"', '\\"')
+        jql = f'project="{safe_project_key}"'
 
         while True:
             params = {
-                "jql": f"project={project_key}",
+                "jql": jql,
                 "fields": "labels",
                 "maxResults": max_results,
             }
