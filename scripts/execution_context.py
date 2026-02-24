@@ -7,7 +7,6 @@ class ExecutionContext:
     def __init__(self, dry_run=False):
         self.dry_run = dry_run
         self.jira = []
-        self.github = []
         self.jira_base_url = os.getenv("JIRA_BASE_URL", "").rstrip("/")
         self.jira_email = os.getenv("JIRA_EMAIL", "")
         self.jira_api_token = os.getenv("JIRA_API_TOKEN", "")
@@ -149,7 +148,3 @@ class ExecutionContext:
                 break
 
         return collected
-
-    def record_github(self, payload):
-        self.github.append(payload)
-        return "https://github.com/dry-run/issue"

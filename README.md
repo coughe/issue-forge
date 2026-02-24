@@ -1,6 +1,6 @@
 # IssueForge
 
-IssueForge is a lightweight work-definition compiler that turns **human-authored YAML** into validated Jira work items and GitHub issues.
+IssueForge is a lightweight work-definition compiler that turns **human-authored YAML** into validated Jira work items.
 
 Humans write YAML. Machines validate structure. Emitters stay deterministic.
 
@@ -25,7 +25,7 @@ YAML (authoring)
 → in-memory model
 → schema validation
 → dry-run or emit
-→ Jira / GitHub (optional)
+→ Jira
 
 ---
 
@@ -165,7 +165,7 @@ gh run watch
 
 When `--dry-run` is enabled:
 
-- No Jira or GitHub API calls are made
+- No Jira API calls are made
 - All validation still runs
 - Issue payloads are constructed
 - Output is printed for inspection
@@ -266,10 +266,10 @@ uv run pytest
 
 ---
 
-## Credentials (Jira / GitHub)
+## Credentials (Jira)
 
 IssueForge supports a safe `--dry-run` mode that requires no credentials.
-When you later enable real Jira/GitHub emitters, you’ll typically provide credentials via environment variables.
+For live execution, provide Jira credentials via environment variables.
 
 An example template is provided in [.env.example](.env.example).
 
@@ -290,25 +290,6 @@ set -a
 source .env
 set +a
 ```
-
-### GitHub token (PAT / fine-grained token)
-
-You need a token that can create/update issues in the target repository.
-
-Fine-grained token:
-- Resource owner: your user or org
-- Repository access: select the repo you’ll target
-- Repository permissions:
-    - **Issues**: Read and write
-    - **Metadata**: Read
-
-Classic PAT (legacy):
-- Public repos: `public_repo`
-- Private repos: `repo`
-
-Set:
-- `GITHUB_REPO=owner/repo`
-- `GITHUB_TOKEN=...`
 
 ### Jira API token (Atlassian Cloud)
 

@@ -8,6 +8,13 @@ sys.path.insert(0, str(Path(__file__).parents[1]))
 from scripts.execution_context import ExecutionContext
 
 
+def test_execution_context_is_jira_only():
+    ctx = ExecutionContext(dry_run=True)
+
+    assert not hasattr(ctx, "record_github")
+    assert not hasattr(ctx, "github")
+
+
 def test_record_jira_dry_run_returns_placeholder():
     ctx = ExecutionContext(dry_run=True)
 
