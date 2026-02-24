@@ -242,7 +242,9 @@ def test_validate_manifest_labels_fails_on_unknown_labels(monkeypatch):
         )
 
 
-def test_dry_run_with_validate_labels_flag_still_works_without_jira_credentials(tmp_path):
+def test_dry_run_with_validate_labels_flag_still_works_without_jira_credentials(
+    tmp_path,
+):
     workload = """
     project: AS
     items:

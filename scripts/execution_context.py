@@ -41,7 +41,9 @@ class ExecutionContext:
         parent_key = payload.get("parent")
 
         if not issue_type or not summary:
-            raise SystemExit("Invalid Jira payload: missing required 'type' or 'summary'")
+            raise SystemExit(
+                "Invalid Jira payload: missing required 'type' or 'summary'"
+            )
 
         if not project_key and not parent_key:
             raise SystemExit(

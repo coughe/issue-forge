@@ -31,7 +31,9 @@ def _parse_cli_args(argv: list[str]) -> tuple[str, bool, str, bool]:
 
         if arg == "--format":
             if index + 1 >= len(argv):
-                raise SystemExit("Missing value for --format (expected 'yaml' or 'json')")
+                raise SystemExit(
+                    "Missing value for --format (expected 'yaml' or 'json')"
+                )
             manifest_format = argv[index + 1].strip().lower()
             index += 2
             continue
@@ -103,7 +105,9 @@ def _validate_manifest_labels(
     allowed_labels = ctx.fetch_project_labels(project)
     if not manifest_labels:
         return
-    invalid_labels = sorted(label for label in manifest_labels if label not in allowed_labels)
+    invalid_labels = sorted(
+        label for label in manifest_labels if label not in allowed_labels
+    )
     if invalid_labels:
         joined = ", ".join(invalid_labels)
         raise SystemExit(f"Unknown Jira labels for project {project}: {joined}")
@@ -149,7 +153,9 @@ def _load_workload(path: str, manifest_format: str = "yaml") -> dict:
             loaded = yaml.safe_load(raw)
         except Exception:
             try:
-                loaded = yaml.safe_load(_normalize_yaml_for_indented_inline_mappings(raw))
+                loaded = yaml.safe_load(
+                    _normalize_yaml_for_indented_inline_mappings(raw)
+                )
             except Exception as exc:
                 raise SystemExit(f"Failed to parse YAML manifest: {exc}") from exc
     elif manifest_format == "json":

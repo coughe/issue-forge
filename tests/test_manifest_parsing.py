@@ -51,7 +51,9 @@ def test_load_workload_top_level_issue_payload_is_rejected(tmp_path):
         '{"project":"AS","issue_type":"Spike","summary":"Investigate ClickHouse","description":"2-day spike","acceptance_criteria":["Run locally","Document findings"]}'
     )
 
-    with pytest.raises(SystemExit, match=r"Manifest must include top-level 'items' list"):
+    with pytest.raises(
+        SystemExit, match=r"Manifest must include top-level 'items' list"
+    ):
         _load_workload(str(workload_path), manifest_format="json")
 
 
