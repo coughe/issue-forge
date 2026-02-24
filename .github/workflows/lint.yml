@@ -26,10 +26,8 @@ jobs:
 
       - name: Install tooling dependencies
         run: |
-          source .venv/bin/activate
-          uv pip install black pytest yamllint jsonschema pyyaml requests
+          uv sync --group dev
 
       - name: Run Black
         run: |
-          source .venv/bin/activate
-          black --check .
+          uv run black --check .
