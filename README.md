@@ -190,6 +190,9 @@ Expected manifest shape:
 - Top-level `items` list
 - Each item can include nested `children` and/or `subtasks`
 
+IssueForge requires the canonical manifest shape above. Top-level single-issue
+shorthand payloads are not accepted.
+
 ### Item Fields
 
 - `summary` (string): issue summary/title

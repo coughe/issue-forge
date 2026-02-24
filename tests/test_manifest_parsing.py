@@ -43,3 +43,21 @@ def test_load_workload_invalid_json_has_helpful_error(tmp_path):
 
     with pytest.raises(SystemExit, match=r"Failed to parse JSON manifest:"):
         _load_workload(str(workload_path), manifest_format="json")
+
+
+def test_load_workload_top_level_issue_payload_is_rejected(tmp_path):
+    workload_path = tmp_path / "single-issue.json"
+    workload_path.write_text(
+        '{"project":"AS","issue_type":"Spike","summary":"Investigate ClickHouse","description":"2-day spike","acceptance_criteria":["Run locally","Document findings"]}'
+    )
+
+    with pytest.raises(SystemExit, match=r"Manifest must include top-level 'items' list"):
+        _load_workload(str(workload_path), manifest_format="json")
+
+
+def test_load_workload_items_must_be_list(tmp_path):
+    workload_path = tmp_path / "bad-items.json"
+    workload_path.write_text('{"project":"AS","items":{}}')
+
+    with pytest.raises(SystemExit, match=r"Manifest field 'items' must be a list"):
+        _load_workload(str(workload_path), manifest_format="json")

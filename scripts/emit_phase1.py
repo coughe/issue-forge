@@ -164,6 +164,14 @@ def _load_workload(path: str, manifest_format: str = "yaml") -> dict:
 
     if not isinstance(loaded, dict):
         raise SystemExit("Workload must be a mapping at the top level")
+
+    if "items" not in loaded:
+        raise SystemExit("Manifest must include top-level 'items' list")
+
+    items = loaded.get("items")
+    if not isinstance(items, list):
+        raise SystemExit("Manifest field 'items' must be a list")
+
     return loaded
 
 
